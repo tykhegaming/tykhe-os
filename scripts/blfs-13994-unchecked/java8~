@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# The instructions in this file are extracted from
+# 'Beyond Linux From Scratch' (2014-08-22 / r13994) but are modified for use
+# with LFScript 4 which installs the software to a fake root directory.
+#
+# Beyond Linux From Scratch is released under the MIT license.
+# Copyright (C) 2001-2014, The BLFS Development Team
+
+WGETLIST=" http://anduin.linuxfromscratch.org/files/BLFS/OpenJDK-1.8.0.31/OpenJDK-1.8.0.31-x86_64-bin.tar.xz"
+MD5SUMLIST="dontverify"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+
+install -vdm755 ${FAKEROOT}/opt/OpenJDK-1.8.0.31-bin &&
+mv -v * ${FAKEROOT}/opt/OpenJDK-1.8.0.31-bin         &&
+chown -R root:root ${FAKEROOT}/opt/OpenJDK-1.8.0.31-bin
+
+#################
+}; postinst() { # POST-INSTALLATION CONFIGURATION #
+###################################################
+
+
+ln -sf /opt/OpenJDK-1.8.0.31-bin /opt/jdk
+
+cat > /etc/profile.d/openjdk.sh << "EOF"
+# Begin /etc/profile.d/openjdk.sh
+
+# Set JAVA_HOME directory
+JAVA_HOME=/opt/jdk
+
+# Adjust PATH
+pathappend $JAVA_HOME/bin PATH
+
+# Auto Java CLASSPATH
+# Copy jar files to, or create symlinks in this directory
+
+AUTO_CLASSPATH_DIR=/usr/share/java
+
+pathprepend . CLASSPATH
+
+for dir in `find ${AUTO_CLASSPATH_DIR} -type d 2>/dev/null`; do
+    pathappend $dir CLASSPATH
+done
+
+for jar in `find ${AUTO_CLASSPATH_DIR} -name "*.jar" 2>/dev/null`; do
+    pathappend $jar CLASSPATH
+done
+
+export JAVA_HOME CLASSPATH
+unset AUTO_CLASSPATH_DIR dir jar
+
+# End /etc/profile.d/openjdk.sh
+EOF
+
+#################
+} # END OF FILE #
+#################

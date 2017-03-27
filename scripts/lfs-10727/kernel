@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# The instructions in this file are extracted from
+# 'Linux From Scratch 7.6' (SVN-20140821 / r10727) but are modified for use
+# with LFScript 4 which installs the software to a fake root directory.
+#
+# Linux From Scratch is released under the MIT license.
+# Copyright (C) 1999-2014, Gerard Beekmans
+
+WGETLIST="https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.19.1.tar.xz"
+MD5SUMLIST="dontverify"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+
+make
+
+make INSTALL_MOD_PATH=${FAKEROOT} modules_install
+make INSTALL_MOD_PATH=${FAKEROOT} headers_install
+
+cp -v arch/x86/boot/bzImage ${FAKEROOT}/boot/vmlinuz-3.19-lfs-7.7
+
+cp -v System.map ${FAKEROOT}/boot/System.map-3.19
+
+cp -v .config ${FAKEROOT}/boot/config-3.19
+
+install -d ${FAKEROOT}/usr/share/doc/linux-3.19
+cp -r Documentation/* ${FAKEROOT}/usr/share/doc/linux-3.19
+
+install -v -m755 -d ${FAKEROOT}/etc/modprobe.d
+cat > ${FAKEROOT}/etc/modprobe.d/usb.conf << "EOF"
+# Begin /etc/modprobe.d/usb.conf
+
+install ohci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i ohci_hcd ; true
+install uhci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i uhci_hcd ; true
+
+# End /etc/modprobe.d/usb.conf
+EOF
+
+#################
+} # END OF FILE #
+#################
+

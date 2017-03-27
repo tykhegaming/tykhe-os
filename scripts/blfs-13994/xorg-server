@@ -1,0 +1,150 @@
+#!/bin/bash
+
+# The instructions in this file are extracted from
+# 'Beyond Linux From Scratch' (2014-08-22 / r13994) but are modified for use
+# with LFScript 4 which installs the software to a fake root directory.
+#
+# Beyond Linux From Scratch is released under the MIT license.
+# Copyright (C) 2001-2014, The BLFS Development Team
+
+WGETLIST="http://xorg.freedesktop.org/archive/individual/xserver/xorg-server-1.16.0.tar.bz2
+          http://www.linuxfromscratch.org/patches/blfs/svn/xorg-server-1.16.0-add_prime_support-1.patch
+          http://www.linuxfromscratch.org/patches/blfs/svn/xorg-server-1.16.0-upstream_glamor_fix-1.patch"
+MD5SUMLIST="8a9ff6ee9907360f09b5bdabb8089502
+            ab5fec928cdd65b101e7de63ec8b17bf
+            e6bb1891368757356880b909faabc5cf"
+REQUIRES="libepoxy openssl pixman x7font xkeyboard-config xorg-env"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+
+patch -Np1 -i ../xorg-server-1.16.0-upstream_glamor_fix-1.patch
+
+patch -Np1 -i ../xorg-server-1.16.0-add_prime_support-1.patch
+
+./configure $XORG_CONFIG                    \
+           --with-xkb-output=/var/lib/xkb   \
+           --enable-dmx                     \
+           --enable-glamor                  \
+           --enable-install-setuid          \
+           --enable-suid-wrapper
+make
+
+make DESTDIR=${FAKEROOT} install
+mkdir -pv ${FAKEROOT}/etc/X11/xorg.conf.d
+
+cat >> ${FAKEROOT}/etc/X11/xorg.conf
+Section "Module"
+	Load	"glx"
+	Load	"dbe"
+	Load	"ddc"
+	Load	"dri"
+	Load	"extmod"
+	Load	"freetype"
+	Load	"int10"
+	Load	"record"
+	Load	"vbe"
+EndSection
+
+# Uncomment to see nice shadows and make the panel semi-transparent
+# Section "Extensions"
+# 	Option "Composite"
+# EndSection
+
+Section "InputDevice"
+	Identifier	"Generic Keyboard"
+	Driver		"kbd"
+	Option		"CoreKeyboard"
+	Option		"XkbRules"	"xorg"
+	Option		"XkbModel"	"pc105"
+	Option		"XkbLayout"	"us"
+	Option	"XkbOptions"	"grp:alt_shift_toggle,compose:menu,grp_led:scroll"
+EndSection
+
+Section "InputDevice"
+	Identifier	"Generic Mouse"
+	Option		"CorePointer"
+	Option		"Device"		"/dev/input/mice"
+# Mouse-specific options, comment out if using a touchpad
+	Driver		"mouse"
+	Option		"Protocol"		"ExplorerPS/2"
+	Option		"Emulate3Buttons"	"true"
+## Touchpad specific options
+#	Driver		"synaptics"
+#	Option		"Protocol"		"auto-dev"
+EndSection
+
+
+Section "Screen"
+	Identifier	"Default Screen"
+	Device		"Generic Video Card"
+	Monitor		"Generic Monitor"
+	DefaultDepth	24
+	SubSection "Display"
+		Depth		8
+	EndSubSection
+	SubSection "Display"
+		Depth		15
+	EndSubSection
+	SubSection "Display"
+		Depth		16
+	EndSubSection
+	SubSection "Display"
+		Depth		24
+		# Modes "1280x1024" "1024x768" "800x600"
+	EndSubSection
+EndSection
+
+Section "ServerLayout"
+	Identifier	"Default Layout"
+	Screen		"Default Screen"
+	InputDevice	"Generic Keyboard"
+	InputDevice	"Generic Mouse"
+EndSection
+
+Section "DRI"
+	Mode	0666
+EndSection
+EOF
+
+cat >> ${FAKEROOT}/etc/X11/app-defaults/xinitrc
+unset LC_ALL
+
+if xrandr | grep -q '\*0.*640 x 480.*\*60'
+then
+	BAD_RESOLUTION="640 x 480"
+fi
+if xrandr | grep -q '\*0.*800 x 600.*\*60'
+then
+	BAD_RESOLUTION="800 x 600"
+fi
+
+if [ -n "$BAD_RESOLUTION" ]
+then
+xmessage -center \
+"The X server could not obtain the allowed synchronization
+frequencies from the monitor because your monitor is not
+Plug-n-Play compatible.  Thus, a default resolution of
+$BAD_RESOLUTION @ 60 Hz has been used.  This can hurt your eyes.
+
+To fix the problem, press Ctrl + Alt + Backspace, and then
+specify the allowed frequency ranges in /etc/X11/xorg.conf
+manually.  See /root/README.txt for details.
+
+If $BAD_RESOLUTION @ 60 Hz is indeed what you want, press the 'okay'
+button to proceed."
+fi
+scim -d
+exec startxfce4
+EOF
+
+cat >> ${FAKEROOT}/etc/sysconfig/createfiles << "EOF"
+/tmp/.ICE-unix dir 1777 root root
+/tmp/.X11-unix dir 1777 root root
+EOF
+
+#################
+} # END OF FILE #
+#################
+

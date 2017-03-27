@@ -1,0 +1,27 @@
+#!/bin/bash
+
+WGETLIST="http://git.code.sf.net/p/aufs/aufs-util.tar.xz"
+MD5SUMLIST="dontverify"
+REQUIRES="kernel"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+
+#For AUFS-Util compilation
+cp linux/aufs_type.h /usr/include/linux/aufs_type.h
+
+#Copy all docker related files 
+cp docker ${FAKEROOT}/usr/bin/docker
+cp cgroupfs-mount ${FAKEROOT}/usr/bin/cgroupfs-mount
+#init Script
+cp etc/init.d/docker ${FAKEROOT}/etc/init.d/docker 
+ln -s /etc/init.d/docker ${FAKEROOT}/etc/rc.d/rc5.d/S35docker 
+
+make
+
+make DESTDIR=${FAKEROOT} install
+
+###################################################
+}
+

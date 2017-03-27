@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# The instructions in this file are extracted from
+# 'Beyond Linux From Scratch' (2014-08-22 / r13994) but are modified for use
+# with LFScript 4 which installs the software to a fake root directory.
+#
+# Beyond Linux From Scratch is released under the MIT license.
+# Copyright (C) 2001-2014, The BLFS Development Team
+
+WGETLIST="http://www.mediafire.com/download/lozb6ec3no9a233/Xquisite.tbz"
+MD5SUMLIST="dontverify"
+REQUIRES="faac faad2 flac networking desktop-file-utils icon-naming-utils xorg xfce shared-mime-info java multimedia-libdriv multimedia-audioutils"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+
+tar -xjf  ../Xquisite.tbz -C ${FAKEROOT}/usr/share/icons
+
+#################
+} # END OF FILE #
+#################
+

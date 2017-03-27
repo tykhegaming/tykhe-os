@@ -1,0 +1,15 @@
+#!/bin/bash
+
+WGETLIST="twscreen.tar.xz"
+MD5SUMLIST="dontverify"
+REQUIRES="aufs-util"
+
+###############################################
+installation() { # INSTALLING SYSTEM SOFTWARE #
+###############################################
+./Install
+cp -r ../twscreen ${FAKEROOT}/opt/ 
+
+###################################################
+}
+
